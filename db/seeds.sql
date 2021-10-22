@@ -23,15 +23,15 @@ VALUES
     ("CEO", 500000, 4);
 
 -- Generate starter data records in the employee table
-INSERT INTO employee (id, first_name, last_name, role_id, manager_id)
+INSERT INTO employee (first_name, last_name, role_id, manager_id)
 VALUES 
-    (1, "Ava", "Sharpe", 11, null),
-    (2, "Mick", "Rory", 1, 6),
-    (3, "Nora", "Darhk", 1, 6),
-    (4, "Ray", "Palmer", 6, 7),
-    (5, "Zari", "Tomaz", 9, 1),
-    (6, "Jefferson", "Jackson", 2, 1),
-    (7, "Astra", "Logue", 8, 1),
-    (8, "Martin", "Stein", 7, 7),
-    (9, "Carter", "Hail", 4, 10),
-    (10, "Wally", "West", 3, 1);
+    ("Ava", "Sharpe", 11, null),
+    ("Mick", "Rory", 1, 6),
+    ("Nora", "Darhk", 1, 6),
+    ("Ray", "Palmer", 6, 7),
+    ("Zari", "Tomaz", 9, 1),
+    ("Jefferson", "Jackson", 2, 1),
+    ("Astra", "Logue", 8, 1),
+    ("Martin", "Stein", 7, 7),
+    ("Carter", "Hail", 4, 10),
+    ("Wally", "West", 3, 1);
