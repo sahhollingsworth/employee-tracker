@@ -2,8 +2,6 @@
 TBD
 
 ## Summary
-TBD
-
 * Upon application start, user is presented with several selectable options:
   * View all departments
     * Upon selection: A formatted table is generated showing department names and department ids.
