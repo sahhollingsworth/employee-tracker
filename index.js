@@ -159,40 +159,54 @@ function viewRoles() {
         mainMenu();
     })
 }
-// SELECT r.id as ID,
-//     r.title as Title,
-//     d.name as Department,
-//     r.salary as Salary
-// FROM roles as r
-// JOIN departments as d ON r.department_id = d.id
 
 //THEN I am prompted to enter the name, salary, and department for the role and that role is added to the database
 function addRole() {
     console.log("Add Role");
-    inquirer
-    .prompt([
-        {
-            type: "input",
-            name: "nameRole",
-            message: "What is the name of the new role?"
-        },
-        {
-            type: "input",
-            name: "salary",
-            message: "What is the salary of the role?"
-        },
-        {
-            type: "list",
-            name: "department",
-            message: "Which department does the role belong to?",
-            choices: [] //pull in departments? Has to be live list from table
-        }
-
-    ])
-    .then(response => {
-        console.log(response + "has been added as a Role.")
-        //sql query to add response as to the Row table
-    })
+    // missing an (err, res)?
+    db.query('SELECT * FROM departments')
+        .then(response => {
+            return departments = response[0].map(department => {
+                return {
+                    id: department.id,
+                    name: department.name
+                }
+            })
+        })
+        .then(departments => {
+            // Inquirer prompt response must be returned for use in next .then 
+            return inquirer
+            .prompt([
+                {
+                    type: "input",
+                    name: "title",
+                    message: "What is the name of the new role?"
+                },
+                {
+                    type: "input",
+                    name: "salary",
+                    message: "What is the salary of the role?"
+                },
+                {
+                    type: "list",
+                    name: "department",
+                    message: "Which department does the role belong to?",
+                    choices: departments
+                }
+            ])
+        })
+        .then(response => {
+            const role = {
+                title: response.title,
+                salary: response.salary,
+                department_id: response.department
+            }
+            db.query('INSERT INTO roles SET ?', role, (err, res) => {
+                if(err) throw err; 
+                console.log("Added " + response.title + " to the database");
+                mainMenu();
+            })
+        })       
 }
 
 //THEN I am presented with a formatted table showing department names and department ids
