@@ -104,7 +104,7 @@ function viewEmployees() {
 
 // Function to return all employees as an array
 function employeesList() {
-    return db.query('SELECT e.id, CONCAT(e.first_name," ",e.last_name) as name, e.role_id, FROM employees as e', (err,res) => {
+    return db.query('SELECT e.id, CONCAT(e.first_name," ",e.last_name) as name, e.role_id FROM employees as e', (err,res) => {
         if(err) throw err;
     })
     .then(response => {
@@ -201,7 +201,7 @@ function updateEmployeeRole() {
         .then(response => {
             console.log("Employee role updated successfully")
             //sql query to identify employee, then edit value of role_id
-            db.query('UPDATE employees SET role_id = ? where id = ?', [response.role, response.employee], (err, results) => {
+            db.query('UPDATE employees SET role_id = ? WHERE id = ?', [response.role, response.employee], (err, results) => {
                 if(err) throw err; 
                 console.log("Employee role updated sucessfully");
                 mainMenu();
@@ -334,8 +334,7 @@ function deleteRole() {
 function viewDepartments() {
     // Testing - function execution
     // console.log("View all Departments");
-    const departments = 'SELECT id as ID, name as Department FROM departments'
-    db.query(departments, (err,res) => {
+    db.query('SELECT id as ID, name as Department FROM departments', (err,res) => {
         if(err) throw err; 
         console.table(res);
         mainMenu();
