@@ -19,19 +19,6 @@ const db = mysql.createConnection(
 
 db.connect();
 
-// console.log("'-------------------------------------------------------'");
-// console.log("|                                                       |");
-// console.log("|    ______                 _                           |");
-// console.log("|   | _____|_ __ ___  _ __ | | ___  _   _  ___  ___     |");
-// console.log("|   |   _| | '_ ` _ \| '_ \| |/ _ \| | | |/ _ \/ _ \    |");
-// console.log("|   |  |___| | | | | | |_) | | (_) | |_| |  __/  __/    |");
-// console.log("|   |______|_| |_| |_| .__/|_|\___/ \__, |\___|\___|    |");
-// console.log("|                    |_|            |___/               |");
-// console.log("|                                                       |");
-// console.log("|                                                       |");
-// console.log("|                                                       |");
-// console.log("'-------------------------------------------------------'");
-
 function mainMenu () {
     inquirer
     .prompt ([
@@ -43,6 +30,7 @@ function mainMenu () {
                 "View all Employees",
                 "Add Employee",
                 "Update Employee Role",
+                "Delete Employee",
                 "View all Roles",
                 "Add Role",
                 "View all Departments",
@@ -61,6 +49,9 @@ function mainMenu () {
                 break;
             case "Update Employee Role":
                 updateEmployeeRole();
+                break;
+            case "Delete Employee":
+                deleteEmployee();
                 break;
             case "View all Roles":
                 viewRoles();
@@ -151,6 +142,29 @@ function addEmployee() {
             mainMenu();
         })
     })
+}
+
+// Function for user to delete record in the employees table
+function deleteEmployee() {
+    console.log("Delete Employee");
+    inquirer
+    .prompt([
+        {
+            type: "list",
+            name: "employee",
+            message: "Which employee would you like to delete?",
+            choices: employeesList()
+        }
+    ])
+    .then(response => {
+        db.query('DELETE * FROM employees WHERE id = ?', response.employee, (err, results) => {
+            if(err) throw err; 
+        })
+    })
+    .then(res => {
+        console.log("Employee deleted sucessfully");
+        mainMenu();
+    })    
 }
 
 // Function for user to change the role_id of an existing record in employees
