@@ -30,6 +30,7 @@ function mainMenu () {
                 "View all Employees",
                 "Add Employee",
                 "Update Employee Role",
+                "Update Employee Manager",
                 "Delete Employee",
                 "View all Roles",
                 "Add Role",
@@ -51,6 +52,9 @@ function mainMenu () {
                 break;
             case "Update Employee Role":
                 updateEmployeeRole();
+                break;
+            case "Update Employee Manager":
+                updateEmployeeManager();
                 break;
             case "Delete Employee":
                 deleteEmployee();
@@ -202,6 +206,36 @@ function updateEmployeeRole() {
                 console.log("Employee role updated sucessfully");
                 mainMenu();
         })
+    })
+}
+
+// Funtion to update the manager_id of any employees table record
+function updateEmployeeManager() {
+    console.log("Update Employee manager");
+    // Create an array of employees to be used in the prompt to select which employee to edit
+    return inquirer
+    .prompt([
+        {
+            type: "list",
+            name: "employee",
+            message: "Which employee's do you want to update?",
+            choices: employeesList()
+        },
+        {
+            type: "list",
+            name: "manager",
+            message:"Which manager should be assigned to the selected employee?",
+            choices: employeesList()
+        }
+    ])
+    .then(response => {
+        db.query('UPDATE employee SET manager_id = ? WHERE id = ?', [response.manager, response.employee], (err, results) => {
+            if(err) throw err; 
+        })
+    })
+    .then(res => {
+        console.log("Employee's Manager updated successfully")
+        mainMenu();
     })
 }
 
