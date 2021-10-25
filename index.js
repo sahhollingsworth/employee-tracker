@@ -17,6 +17,21 @@ const db = mysql.createConnection(
     console.log(`Connected to the employees_db database.`)
 );
 
+db.connect();
+
+// console.log("'-------------------------------------------------------'");
+// console.log("|                                                       |");
+// console.log("|    ______                 _                           |");
+// console.log("|   | _____|_ __ ___  _ __ | | ___  _   _  ___  ___     |");
+// console.log("|   |   _| | '_ ` _ \| '_ \| |/ _ \| | | |/ _ \/ _ \    |");
+// console.log("|   |  |___| | | | | | |_) | | (_) | |_| |  __/  __/    |");
+// console.log("|   |______|_| |_| |_| .__/|_|\___/ \__, |\___|\___|    |");
+// console.log("|                    |_|            |___/               |");
+// console.log("|                                                       |");
+// console.log("|                                                       |");
+// console.log("|                                                       |");
+// console.log("'-------------------------------------------------------'");
+
 function mainMenu () {
     inquirer
     .prompt ([
@@ -27,6 +42,7 @@ function mainMenu () {
             choices: [
                 "View all Employees",
                 "Add Employee",
+                "Update Employee Role",
                 "View all Roles",
                 "Add Role",
                 "View all Departments",
@@ -36,7 +52,7 @@ function mainMenu () {
         }
     ])
     .then (response => {
-        switch (response.choice) {
+        switch (response.action) {
             case "View all Employees":
                 viewEmployees();
                 break;
@@ -69,12 +85,13 @@ function mainMenu () {
 
 // EMPLOYEES functions
 
-// how to show manager name?////////////////////////////
+// show manager name////////////////////////////
 // Generate table with employee ids,  names, job titles, departments, salaries, and any managers 
 function viewEmployees() {
-    console.log("View all Employees")
+    // Testing - function execution
+    // console.log("View all Employees")
     //sql query to render employees table data
-    const employees = 'SELECT e.id as ID, CONCAT(e.first_name,"  ",e.last_name) as Name, r.title as Title, d.name as Department, r.salary as Salary, FROM employee as e JOIN role as r on e.role_id = r.id JOIN department as d on r.department_id = d.id'
+    const employees = 'SELECT e.id as ID, CONCAT(e.first_name,"  ",e.last_name) as Name, r.title as Title, d.name as Department, r.salary as Salary FROM employees as e JOIN roles as r on e.role_id = r.id JOIN departments as d on r.department_id = d.id'
     db.query(employees, (err,res) => {
         if(err) throw err; 
         console.table(res);
@@ -84,7 +101,7 @@ function viewEmployees() {
 
 // Function to return all employees as an array
 function employeesList() {
-    return db.query('SELECT e.id, CONCAT(e.first_name," ",e.last_name) as name, e.role_id, FROM employees as e', (err,res) => {
+    return db.promise().query('SELECT e.id, CONCAT(e.first_name," ",e.last_name) as name, e.role_id, FROM employees as e', (err,res) => {
         if(err) throw err;
     })
     .then(response => {
@@ -170,8 +187,8 @@ function updateEmployeeRole() {
 
 // Generate table with all job titles, ids, salaraies, and corresponding departments 
 function viewRoles() {
-    console.log("View all Roles");
-    //sql query to render roles table data
+    // Testing - function execution
+    // console.log("View all Roles");
     const roles = 'SELECT r.id as ID, r.title as Title, d.name as Department, r.salary as Salary FROM roles as r JOIN departments as d ON r.department_id = d.id'
     db.query(roles, (err,res) => {
         if(err) throw err; 
@@ -182,7 +199,7 @@ function viewRoles() {
 
 // Function to return all roles as an array
 function rolesList() {
-    return db.query("SELECT * FROM roles as r", (err,res) => {
+    return db.promise().query("SELECT * FROM roles as r", (err,res) => {
         if(err) throw err;
     }) 
     .then(res => {
@@ -197,9 +214,10 @@ function rolesList() {
 
 // Function for user to add a role by writing a record to the roles table and relating to a department (departments.id)
 function addRole() {
-    console.log("Add Role");
+    // Testing - function execution
+    // console.log("Add Role");
     // missing an (err, res)? /////////////////////////////
-    return inquirer
+    inquirer
     .prompt([
         {
             type: "input",
@@ -236,7 +254,8 @@ function addRole() {
 
 // Generate table showing department names and ids
 function viewDepartments() {
-    console.log("View all Departments");
+    // Testing - function execution
+    // console.log("View all Departments");
     const departments = 'SELECT id as ID, name as Department FROM departments'
     db.query(departments, (err,res) => {
         if(err) throw err; 
@@ -247,7 +266,7 @@ function viewDepartments() {
 
 // Function to return all departments as an array
 function departmentsList() {
-    return db.query("SELECT * FROM departments as d", (err,res) => {
+    return db.promise().query("SELECT * FROM departments as d", (err,res) => {
         if(err) throw err;
     }) 
     .then(response => {
