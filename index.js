@@ -67,8 +67,6 @@ function mainMenu () {
     })
 }
 
-// format: connection.query(sql, function (err, rows, fields) {}
-
 // how to show manager name?
 //Generate table with employee ids,  names, job titles, departments, salaries, and managers that the employees report to
 function viewEmployees() {
@@ -77,7 +75,7 @@ function viewEmployees() {
     const employees = 'SELECT e.id as ID, CONCAT(e.first_name,"  ",e.last_name) as Name, r.title as Title, d.name as Department, r.salary as Salary, FROM employee as e JOIN role as r on e.role_id = r.id JOIN department as d on r.department_id = d.id'
     db.query(employees, (err,res) => {
         if(err) throw err; 
-        console.table(res)
+        console.table(res);
         mainMenu();
     })
 }
@@ -157,7 +155,7 @@ function viewRoles() {
     const roles = 'SELECT r.id as ID, r.title as Title, d.name as Department, r.salary as Salary FROM roles as r JOIN departments as d ON r.department_id = d.id'
     db.query(roles, (err,res) => {
         if(err) throw err; 
-        console.table(res)
+        console.table(res);
         mainMenu();
     })
 }
@@ -203,7 +201,7 @@ function viewDepartments() {
     const departments = 'SELECT id as ID, name as Department FROM departments'
     db.query(departments, (err,res) => {
         if(err) throw err; 
-        console.table(res)
+        console.table(res);
         mainMenu();
     })
 }
@@ -220,8 +218,14 @@ function addDepartment() {
         }
     ])
     .then(response => {
-        console.log(response + "has been added as a Department.")
+        console.log(typeof(response.department_name));
         //sql query to add response to the department table
+        const department = response.department_name
+        db.query('INSERT INTO departments (name) VALUES (?)', department, (err, res) => {
+            if(err) throw err; 
+            console.log("Added " + response.department_name + " to the database");
+            mainMenu();
+        })
     })
 }
 
