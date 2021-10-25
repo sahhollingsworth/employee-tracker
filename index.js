@@ -5,6 +5,18 @@ const mysql = require("mysql2");
 // Call console.table method for printing tables to CLI
 const cTable = require("console.table");
 
+const db = mysql.createConnection(
+    {
+      host: "localhost",
+      // MySQL username,
+      user: "root",
+      // MySQL password
+      password: "root",
+      database: "employees_db"
+    },
+    console.log(`Connected to the employees_db database.`)
+);
+
 function mainMenu () {
     inquirer
     .prompt ([
@@ -27,22 +39,30 @@ function mainMenu () {
         switch (response.choice) {
             case "View all Employees":
                 viewEmployees();
+                break;
             case "Add Employee":
                 addEmployee();
+                break;
             case "Update Employee Role":
                 updateEmployee();
+                break;
             case "View all Roles":
                 viewRoles();
+                break;
             case "Add Role":
                 addRole();
+                break;
             case "View all Departments":
                 viewDepartments();
+                break;
             case "Add Department":
                 addDepartment();
+                break;
             case "Exit Program":
                 // called when b/c application is stopping, end of possible queries sent to MySQL
                 connection.end();
                 console.log("Goodbye.");
+                break;
         }
     })
 }
@@ -50,6 +70,7 @@ function mainMenu () {
 //THEN I am presented with a formatted table showing employee data, including employee ids, first names, last names, job titles, departments, salaries, and managers that the employees report to
 function viewEmployees() {
     console.log("View all Employees")
+    //sql query to render employees table data
 }
 
 
@@ -58,10 +79,32 @@ function addEmployee() {
     console.log("Add Employee");
     inquirer
     .prompt([
-
+        {
+            type: "input",
+            name: "firstname",
+            message: "What is the employee's first name?"
+        },
+        {
+            type: "input",
+            name: "lastname",
+            message: "What is the employee's last name?"
+        },
+        {
+            type: "list",
+            name: "role",
+            message: "What is their role? ",
+            choices: [] //pull in roles? Has to be live list from table
+        },
+        {
+            type: "list",
+            name: "manager",
+            message: "Whats their managers name?",
+            choices: [] //pull in manager? Has to be live list from table
+        }
     ])
     .then([
-
+        console.log("Employee added successfully")
+        //sql query to add new record to db, approrpiately matching prompt.response values to employee columns
     ])
 }
 
@@ -84,6 +127,8 @@ function updateEmployee() {
         }
     ])
     .then([
+        console.log("Employee role updated successfully")
+        //sql query to identify employee, then edit value of role_id
 
     ])
 }
@@ -91,6 +136,7 @@ function updateEmployee() {
 // THEN I am presented with the job title, role id, the department that role belongs to, and the salary for that role
 function viewRoles() {
     console.log("View all Roles");
+    //sql query to render roles table data
 }
 
 //THEN I am prompted to enter the name, salary, and department for the role and that role is added to the database
@@ -125,6 +171,7 @@ function addRole() {
 //THEN I am presented with a formatted table showing department names and department ids
 function viewDepartments() {
     console.log("View all Departments");
+    //sql query to render departments table data
 }
 
 //THEN I am prompted to enter the name of the department and that department is added to the database
@@ -135,7 +182,7 @@ function addDepartment() {
         {
             type: "input",
             name: "department_name",
-            message: "What is the name of the Department?"
+            message: "What is the name of the new department?"
         }
     ])
     .then(response => {
