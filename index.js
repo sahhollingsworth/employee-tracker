@@ -11,7 +11,7 @@ const db = mysql.createConnection(
         // MySQL username,
         user: "root",
         // MySQL password
-        password: "root",
+        password: "password",
         database: "employees_db"
     },
     console.log(`Connected to the employees_db database.`)
@@ -44,7 +44,7 @@ function mainMenu () {
                 addEmployee();
                 break;
             case "Update Employee Role":
-                updateEmployee();
+                updateEmployeeRole();
                 break;
             case "View all Roles":
                 viewRoles();
@@ -67,8 +67,10 @@ function mainMenu () {
     })
 }
 
-// how to show manager name?
-//Generate table with employee ids,  names, job titles, departments, salaries, and managers that the employees report to
+// EMPLOYEES functions
+
+// how to show manager name?////////////////////////////
+// Generate table with employee ids,  names, job titles, departments, salaries, and any managers 
 function viewEmployees() {
     console.log("View all Employees")
     //sql query to render employees table data
@@ -79,17 +81,23 @@ function viewEmployees() {
         mainMenu();
     })
 }
-// SELECT e.id as ID, 
-//     CONCAT(e.first_name," ",e.last_name) as Name,
-//     r.title as Title,
-//     d.name as Department,
-//     r.salary as Salary
-// FROM employees as e
-// JOIN roles as r on e.role_id = r.id
-// JOIN departments as d on r.department_id = d.id
 
+// Function to return all employees as an array
+function employeesList() {
+    return db.query('SELECT e.id, CONCAT(e.first_name," ",e.last_name) as name, e.role_id, FROM employees as e', (err,res) => {
+        if(err) throw err;
+    })
+    .then(response => {
+        return response[0].map(employee => {
+            return {
+                name: e.name,
+                value: e.id
+            }
+        })
+    }) 
+}
 
-//I am prompted to enter the employee’s first name, last name, role, and manager, and that employee is added to the database
+// Function for user to create a new record in the employees table
 function addEmployee() {
     console.log("Add Employee");
     inquirer
@@ -108,47 +116,59 @@ function addEmployee() {
             type: "list",
             name: "role",
             message: "What is their role? ",
-            choices: [] //pull in roles? Has to be live list from table
+            choices: rolesList()
         },
         {
             type: "list",
             name: "manager",
-            message: "Whats their managers name?",
-            choices: [] //pull in manager? Has to be live list from table
+            message: "Who is their manager?",
+            choices: employeesList()
         }
     ])
-    .then([
-        console.log("Employee added successfully")
-        //sql query to add new record to db, approrpiately matching prompt.response values to employee columns
-    ])
+    .then(response => {
+        console.log(response.role);
+        console.log(response.manager);
+        db.query('INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES (?)', [response.firstname, response.lastname, response.role, response.manager], (err, results) => {
+            if(err) throw err; 
+            console.log("Employee added sucessfully");
+            mainMenu();
+        })
+    })
 }
 
-//THEN I am prompted to select an employee to update and their new role and this information is updated in the database
-function updateEmployee() {
+// Function for user to change the role_id of an existing record in employees
+function updateEmployeeRole() {
     console.log("Update Employee role");
-    inquirer
-    .prompt([
-        {
-            type: "list",
-            name: "employees",
-            message: "Which employee's role do you want to update?",
-            choices: [] //pull in employees? Has to be live list from table
-        },
-        {
-            type: "list",
-            name: "roles",
-            message: "Which role do you want to assign to the selected employee?",
-            choices: [] //pull in roles? Has to be live list from table
-        }
-    ])
-    .then([
-        console.log("Employee role updated successfully")
-        //sql query to identify employee, then edit value of role_id
-
-    ])
+    // Create an array of employees to be used in the prompt to select which employee to edit
+        return inquirer
+        .prompt([
+            {
+                type: "list",
+                name: "employee",
+                message: "Which employee's role do you want to update?",
+                choices: employeesList()
+            },
+            {
+                type: "list",
+                name: "role",
+                message: "Which role do you want to assign to the selected employee?",
+                choices: rolesList()
+            }
+        ])
+        .then(response => {
+            console.log("Employee role updated successfully")
+            //sql query to identify employee, then edit value of role_id
+            db.query('UPDATE employees SET role_id = ? where id = ?', [response.role, response.employee], (err, results) => {
+                if(err) throw err; 
+                console.log("Employee role updated sucessfully");
+                mainMenu();
+        })
+    })
 }
 
-// THEN I am presented with the job title, role id, the department that role belongs to, and the salary for that role
+// ROLES Functions
+
+// Generate table with all job titles, ids, salaraies, and corresponding departments 
 function viewRoles() {
     console.log("View all Roles");
     //sql query to render roles table data
@@ -160,56 +180,61 @@ function viewRoles() {
     })
 }
 
-//THEN I am prompted to enter the name, salary, and department for the role and that role is added to the database
-function addRole() {
-    console.log("Add Role");
-    // missing an (err, res)?
-    db.query('SELECT * FROM departments')
-        .then(response => {
-            return departments = response[0].map(department => {
-                return {
-                    id: department.id,
-                    name: department.name
-                }
-            })
-        })
-        .then(departments => {
-            // Inquirer prompt response must be returned for use in next .then 
-            return inquirer
-            .prompt([
-                {
-                    type: "input",
-                    name: "title",
-                    message: "What is the name of the new role?"
-                },
-                {
-                    type: "input",
-                    name: "salary",
-                    message: "What is the salary of the role?"
-                },
-                {
-                    type: "list",
-                    name: "department",
-                    message: "Which department does the role belong to?",
-                    choices: departments
-                }
-            ])
-        })
-        .then(response => {
-            const role = {
-                title: response.title,
-                salary: response.salary,
-                department_id: response.department
+// Function to return all roles as an array
+function rolesList() {
+    return db.query("SELECT * FROM roles as r", (err,res) => {
+        if(err) throw err;
+    }) 
+    .then(res => {
+        return res[0].map(role => {
+            return {
+                name: r.title,
+                value: r.id
             }
-            db.query('INSERT INTO roles SET ?', role, (err, res) => {
-                if(err) throw err; 
-                console.log("Added " + response.title + " to the database");
-                mainMenu();
-            })
-        })       
+        })
+    })      
 }
 
-//THEN I am presented with a formatted table showing department names and department ids
+// Function for user to add a role by writing a record to the roles table and relating to a department (departments.id)
+function addRole() {
+    console.log("Add Role");
+    // missing an (err, res)? /////////////////////////////
+    return inquirer
+    .prompt([
+        {
+            type: "input",
+            name: "title",
+            message: "What is the name of the new role?"
+        },
+        {
+            type: "input",
+            name: "salary",
+            message: "What is the salary of the role?"
+        },
+        {
+            type: "list",
+            name: "department",
+            message: "Which department does the role belong to?",
+            choices: departmentsList()
+        }
+    ])
+    .then(response => {
+        const role = {
+            title: response.title,
+            salary: response.salary,
+            department_id: response.department
+        }
+        db.query('INSERT INTO roles SET ?', role, (err, res) => {
+            if(err) throw err; 
+            console.log("Added " + response.title + " to the database");
+            mainMenu();
+        })
+    })       
+}
+
+// DEPARTMENTS functions
+
+// Generate table showing department names and ids
 function viewDepartments() {
     console.log("View all Departments");
     const departments = 'SELECT id as ID, name as Department FROM departments'
@@ -220,7 +245,23 @@ function viewDepartments() {
     })
 }
 
-//THEN I am prompted to enter the name of the department and that department is added to the database
+// Function to return all departments as an array
+function departmentsList() {
+    return db.query("SELECT * FROM departments as d", (err,res) => {
+        if(err) throw err;
+    }) 
+    .then(response => {
+        return departments = response[0].map(department => {
+            return {
+                name: d.name,
+                value: d.id
+            }
+        })
+    })      
+}
+
+
+// Function for user to add a department by writing a record to the departments table
 function addDepartment() {
     console.log("Add Department");
     inquirer
