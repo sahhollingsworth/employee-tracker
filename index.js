@@ -33,6 +33,7 @@ function mainMenu () {
                 "Delete Employee",
                 "View all Roles",
                 "Add Role",
+                "Delete Role",
                 "View all Departments",
                 "Add Department",
                 "Delete Department",
@@ -59,6 +60,9 @@ function mainMenu () {
                 break;
             case "Add Role":
                 addRole();
+                break;
+            case "Delete Role":
+                deleteRole();
                 break;
             case "View all Departments":
                 viewDepartments();
@@ -234,7 +238,6 @@ function rolesList() {
 function addRole() {
     // Testing - function execution
     // console.log("Add Role");
-    // missing an (err, res)? /////////////////////////////
     inquirer
     .prompt([
         {
@@ -266,6 +269,29 @@ function addRole() {
             mainMenu();
         })
     })       
+}
+
+// Function to delete record in the roles table
+function deleteRole() {
+    console.log("Delete Role");
+    inquirer
+    .prompt([
+        {
+            type: "list",
+            name: "role",
+            message: "Which department would you like to delete?",
+            choices: rolesList()
+        }
+    ])
+    .then(response => {
+        db.query('DELETE * FROM roles WHERE id = ?', response.role, (err, results) => {
+            if(err) throw err; 
+        })
+    })
+    .then(res => {
+        console.log("Role deleted sucessfully");
+        mainMenu();
+    }) 
 }
 
 // DEPARTMENTS functions
@@ -320,6 +346,7 @@ function addDepartment() {
     })
 }
 
+// Function to delete record in the departments table
 function deleteDepartment() {
     console.log("Delete Department");
     inquirer
