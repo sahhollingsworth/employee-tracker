@@ -35,6 +35,7 @@ function mainMenu () {
                 "Add Role",
                 "View all Departments",
                 "Add Department",
+                "Delete Department",
                 "Exit Program"
             ]
         }
@@ -65,6 +66,9 @@ function mainMenu () {
             case "Add Department":
                 addDepartment();
                 break;
+            case "Delete Department":
+                deleteDepartment();
+                break;
             case "Exit Program":
                 // called when b/c application is stopping, end of possible queries sent to MySQL
                 connection.end();
@@ -92,7 +96,7 @@ function viewEmployees() {
 
 // Function to return all employees as an array
 function employeesList() {
-    return db.promise().query('SELECT e.id, CONCAT(e.first_name," ",e.last_name) as name, e.role_id, FROM employees as e', (err,res) => {
+    return db.query('SELECT e.id, CONCAT(e.first_name," ",e.last_name) as name, e.role_id, FROM employees as e', (err,res) => {
         if(err) throw err;
     })
     .then(response => {
@@ -105,7 +109,7 @@ function employeesList() {
     }) 
 }
 
-// Function for user to create a new record in the employees table
+// Function to create a new record in the employees table
 function addEmployee() {
     console.log("Add Employee");
     inquirer
@@ -144,7 +148,7 @@ function addEmployee() {
     })
 }
 
-// Function for user to delete record in the employees table
+// Function to delete record in the employees table
 function deleteEmployee() {
     console.log("Delete Employee");
     inquirer
@@ -167,7 +171,7 @@ function deleteEmployee() {
     })    
 }
 
-// Function for user to change the role_id of an existing record in employees
+// Function to change the role_id of an existing record in employees
 function updateEmployeeRole() {
     console.log("Update Employee role");
     // Create an array of employees to be used in the prompt to select which employee to edit
@@ -213,7 +217,7 @@ function viewRoles() {
 
 // Function to return all roles as an array
 function rolesList() {
-    return db.promise().query("SELECT * FROM roles as r", (err,res) => {
+    return db.query("SELECT * FROM roles as r", (err,res) => {
         if(err) throw err;
     }) 
     .then(res => {
@@ -280,7 +284,7 @@ function viewDepartments() {
 
 // Function to return all departments as an array
 function departmentsList() {
-    return db.promise().query("SELECT * FROM departments as d", (err,res) => {
+    return db.query("SELECT * FROM departments as d", (err,res) => {
         if(err) throw err;
     }) 
     .then(response => {
@@ -292,7 +296,6 @@ function departmentsList() {
         })
     })      
 }
-
 
 // Function for user to add a department by writing a record to the departments table
 function addDepartment() {
@@ -315,6 +318,28 @@ function addDepartment() {
             mainMenu();
         })
     })
+}
+
+function deleteDepartment() {
+    console.log("Delete Department");
+    inquirer
+    .prompt([
+        {
+            type: "list",
+            name: "department",
+            message: "Which department would you like to delete?",
+            choices: departmentsList()
+        }
+    ])
+    .then(response => {
+        db.query('DELETE * FROM departments WHERE id = ?', response.department, (err, results) => {
+            if(err) throw err; 
+        })
+    })
+    .then(res => {
+        console.log("Department deleted sucessfully");
+        mainMenu();
+    })    
 }
 
 // Start app logic at main menu
