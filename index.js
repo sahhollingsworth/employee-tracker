@@ -7,12 +7,12 @@ const cTable = require("console.table");
 
 const db = mysql.createConnection(
     {
-      host: "localhost",
-      // MySQL username,
-      user: "root",
-      // MySQL password
-      password: "root",
-      database: "employees_db"
+        host: "localhost",
+        // MySQL username,
+        user: "root",
+        // MySQL password
+        password: "root",
+        database: "employees_db"
     },
     console.log(`Connected to the employees_db database.`)
 );
@@ -67,11 +67,28 @@ function mainMenu () {
     })
 }
 
-//THEN I am presented with a formatted table showing employee data, including employee ids, first names, last names, job titles, departments, salaries, and managers that the employees report to
+// format: connection.query(sql, function (err, rows, fields) {}
+
+// how to show manager name?
+//Generate table with employee ids,  names, job titles, departments, salaries, and managers that the employees report to
 function viewEmployees() {
     console.log("View all Employees")
     //sql query to render employees table data
+    const employees = 'SELECT e.id as ID, CONCAT(e.first_name,"  ",e.last_name) as Name, r.title as Title, d.name as Department, r.salary as Salary, FROM employee as e JOIN role as r on e.role_id = r.id JOIN department as d on r.department_id = d.id'
+    db.query(employees, (err,res) => {
+        if(err) throw err; 
+        console.table(res)
+        mainMenu();
+    })
 }
+// SELECT e.id as ID, 
+//     CONCAT(e.first_name," ",e.last_name) as Name,
+//     r.title as Title,
+//     d.name as Department,
+//     r.salary as Salary
+// FROM employees as e
+// JOIN roles as r on e.role_id = r.id
+// JOIN departments as d on r.department_id = d.id
 
 
 //I am prompted to enter the employee’s first name, last name, role, and manager, and that employee is added to the database
@@ -137,7 +154,19 @@ function updateEmployee() {
 function viewRoles() {
     console.log("View all Roles");
     //sql query to render roles table data
+    const roles = 'SELECT r.id as ID, r.title as Title, d.name as Department, r.salary as Salary FROM roles as r JOIN departments as d ON r.department_id = d.id'
+    db.query(roles, (err,res) => {
+        if(err) throw err; 
+        console.table(res)
+        mainMenu();
+    })
 }
+// SELECT r.id as ID,
+//     r.title as Title,
+//     d.name as Department,
+//     r.salary as Salary
+// FROM roles as r
+// JOIN departments as d ON r.department_id = d.id
 
 //THEN I am prompted to enter the name, salary, and department for the role and that role is added to the database
 function addRole() {
@@ -171,7 +200,12 @@ function addRole() {
 //THEN I am presented with a formatted table showing department names and department ids
 function viewDepartments() {
     console.log("View all Departments");
-    //sql query to render departments table data
+    const departments = 'SELECT id as ID, name as Department FROM departments'
+    db.query(departments, (err,res) => {
+        if(err) throw err; 
+        console.table(res)
+        mainMenu();
+    })
 }
 
 //THEN I am prompted to enter the name of the department and that department is added to the database
