@@ -254,78 +254,116 @@ function viewRoles() {
 }
 
 // Function to return all roles as an array
-function rolesList() {
-    return db.query("SELECT * FROM roles as r", (err,res) => {
-        if(err) throw err;
-    }) 
-    .then(res => {
-        return res[0].map(role => {
-            return {
-                name: r.title,
-                value: r.id
-            }
-        })
-    })      
-}
+// function rolesList() {
+//     return db.query("SELECT * FROM roles as r", (err,res) => {
+//         if(err) throw err;
+//     }) 
+//     .then(res => {
+//         return res[0].map(role => {
+//             return {
+//                 name: r.title,
+//                 value: r.id
+//             }
+//         })
+//     })      
+// }
 
 // Function for user to add a role by writing a record to the roles table and relating to a department (departments.id)
 function addRole() {
     // Testing - function execution
-    // console.log("Add Role");
-    inquirer
-    .prompt([
-        {
-            type: "input",
-            name: "title",
-            message: "What is the name of the new role?"
-        },
-        {
-            type: "input",
-            name: "salary",
-            message: "What is the salary of the role?"
-        },
-        {
-            type: "list",
-            name: "department",
-            message: "Which department does the role belong to?",
-            choices: departmentsList()
-        }
-    ])
-    .then(response => {
-        const role = {
-            title: response.title,
-            salary: response.salary,
-            department_id: response.department
-        }
-        db.query('INSERT INTO roles SET ?', role, (err, res) => {
-            if(err) throw err; 
-            console.log("Added " + response.title + " to the database");
+    console.log("Add Role");
+    db.promise().query("SELECT * FROM departments")
+        .then(res => {
+            // result is an array of arrays of departments table record data, column definitios 
+            // console.log(res);
+            // map the the values of the 1st object (table record data array) into a new set of values expected by inquirer.prompt later
+            return res[0].map(department => {
+                return {
+                    name: department.name,
+                    value: department.id
+                }
+            })
+        })
+        // User the new departmentList array for the choices in Department selection question
+        .then((departmentList) => {
+            // Return the results of the prompts so following then can access
+            return inquirer
+            .prompt([
+                {
+                    type: "input",
+                    name: "title",
+                    message: "What is the name of the new role?"
+                },
+                {
+                    type: "input",
+                    name: "salary",
+                    message: "What is the salary of the role?"
+                },
+                {
+                    type: "list",
+                    name: "department",
+                    message: "Which department does the role belong to?",
+                    choices: departmentList
+                }
+            ])
+        })
+        // Answer is inquirer-specific syntax for using data provided by user in response to prompts
+        .then(answer => {
+            // create object with parameters necessary for a record in roles table
+            const role = {
+                title: answer.title,
+                salary: answer.salary,
+                department_id: answer.department
+            }
+            // Create a record in roles. SET indicates both the columns and corresponding values will be provided in the role object
+            db.query('INSERT INTO roles SET ?', role, (err) => {
+                if(err) throw err; 
+            })
+        })
+        .then(res => {
+            console.log("Role added to the database");
             mainMenu();
         })
-    })       
+        .catch(err => {throw err})
 }
 
 // Function to delete record in the roles table
 function deleteRole() {
     console.log("Delete Role");
-    inquirer
-    .prompt([
-        {
-            type: "list",
-            name: "role",
-            message: "Which department would you like to delete?",
-            choices: rolesList()
-        }
-    ])
-    .then(response => {
-        db.query('DELETE * FROM roles WHERE id = ?', response.role, (err, results) => {
-            if(err) throw err; 
+    db.promise().query("SELECT * FROM roles")
+        .then(res => {
+            // result is an array of arrays of roles table record data, column definitios 
+            // console.log(res);
+            // map the the values of the 1st object (table record data array) into a new set of values expected by inquirer.prompt later
+            return res[0].map(role => {
+                return {
+                    name: role.title,
+                    value: role.id
+                }
+            })
         })
-    })
-    .then(res => {
-        console.log("Role deleted sucessfully");
-        mainMenu();
-    }) 
+        // User the new departmentList array for the choices in Department selection question
+        .then((rolesList) => {
+            return inquirer
+            .prompt([
+                {
+                    type: "list",
+                    name: "role",
+                    message: "Which department would you like to delete?",
+                    choices: rolesList
+                }
+            ])
+        })
+        .then(answer => {
+            db.query('DELETE * FROM roles WHERE id = ?', answer.role, (err) => {
+                if(err) throw err; 
+            })
+        })
+        .then(res => {
+            console.log("Role deleted sucessfully");
+            mainMenu();
+        })
+        .catch(err => {throw err})
 }
 
 // DEPARTMENTS functions
@@ -339,21 +377,6 @@ function viewDepartments() {
         console.table(res);
         mainMenu();
     })
-}
-
-// Function to return all departments as an array
-function departmentsList() {
-    return db.query("SELECT * FROM departments as d", (err,res) => {
-        if(err) throw err;
-    }) 
-    .then(response => {
-        return departments = response[0].map(department => {
-            return {
-                name: d.name,
-                value: d.id
-            }
-        })
-    })      
 }
 
 // Function for user to add a department by writing a record to the departments table
