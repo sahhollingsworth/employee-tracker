@@ -94,7 +94,7 @@ function viewEmployees() {
     // Testing - function execution
     // console.log("View all Employees")
     //sql query to render employees table data
-    const employees = 'SELECT e.id as ID, CONCAT(e.first_name,"  ",e.last_name) as Name, r.title as Title, d.name as Department, r.salary as Salary FROM employees as e JOIN roles as r on e.role_id = r.id JOIN departments as d on r.department_id = d.id'
+    const employees = 'SELECT e.id as ID, CONCAT(e.first_name," ",e.last_name) as Name, r.title as Title, d.name as Department, r.salary as Salary FROM employees as e JOIN roles as r on e.role_id = r.id JOIN departments as d on r.department_id = d.id'
     db.query(employees, (err,res) => {
         if(err) throw err; 
         console.table(res);
@@ -102,19 +102,45 @@ function viewEmployees() {
     })
 }
 
-// Function to return all employees as an array
-function employeesList() {
-    return db.query('SELECT e.id, CONCAT(e.first_name," ",e.last_name) as name, e.role_id FROM employees as e', (err,res) => {
-        if(err) throw err;
+//Empty array to store all roles as objects
+var rolesList = [];
+
+function listRoles() {
+    db.query("SELECT id, title FROM roles", function(err, res) {
+        if (err) throw err;
+        for (var i = 0; i < res.length; i++) {
+            rolesList.push(res[i].title);
+        }
     })
-    .then(response => {
-        return response[0].map(employee => {
-            return {
-                name: e.name,
-                value: e.id
-            }
-        })
-    }) 
+    console.log(rolesList);
+    return rolesList;
+}
+
+//Empty array to store all roles as objects
+var departmentsList = [];
+
+// function listDepartments() {
+//     db.query("SELECT * FROM departments", function(err, res) {
+//         if (err) throw err;
+//         for (var i = 0; i < res.length; i++) {
+//             departmentsList.push(res[i].id + "-" + res[i].first_name+" "+ res[i].last_name);
+//         }
+//     })
+//     return departmentsList;
+// }
+
+//Empty array to store all employees as objects
+var employeesList = [];
+
+function listEmployees() {
+    db.query('SELECT id, CONCAT(first_name," ",last_name) as name FROM employees', function(err, res) {
+        if (err) throw err;
+        for (var i = 0; i < res.length; i++) {
+            employeesList.push(res[i].name);
+        }
+    })
+    console.log(employeesList);
+    return employeesList;
 }
 
 // Function to create a new record in the employees table
@@ -136,48 +162,61 @@ function addEmployee() {
             type: "list",
             name: "role",
             message: "What is their role? ",
-            choices: rolesList()
+            choices: listRoles()
         },
         {
             type: "list",
             name: "manager",
             message: "Who is their manager?",
-            choices: employeesList()
+            choices: listEmployees()
         }
     ])
-    .then(response => {
-        console.log(response.role);
-        console.log(response.manager);
-        db.query('INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES (?)', [response.firstname, response.lastname, response.role, response.manager], (err, results) => {
-            if(err) throw err; 
-            console.log("Employee added sucessfully");
-            mainMenu();
-        })
-    })
-}
-
-// Function to delete record in the employees table
-function deleteEmployee() {
-    console.log("Delete Employee");
-    inquirer
-    .prompt([
-        {
-            type: "list",
-            name: "employee",
-            message: "Which employee would you like to delete?",
-            choices: employeesList()
+    .then(function(answer) {
+        var roleId = listRoles().indexOf(answer.role) + 1
+        var managerId = listEmployees().indexOf(answer.manager) + 1
+        const employee = {
+            first_name: answer.firstname,
+            last_name: answer.lastname,
+            manager_id: managerId,
+            role_id: roleId,
         }
-    ])
-    .then(response => {
-        db.query('DELETE * FROM employees WHERE id = ?', response.employee, (err, results) => {
+        db.query('INSERT INTO employees SET ? ', employee, (err) => {
             if(err) throw err; 
         })
     })
     .then(res => {
-        console.log("Employee deleted sucessfully");
+        console.log("Employee added sucessfully");
         mainMenu();
-    })    
+    })
 }
+
+// Create a record in roles. SET indicates both the columns and corresponding values will be provided in the role object
+
+
+
+
+// Function to delete record in the employees table
+// function deleteEmployee() {
+//     console.log("Delete Employee");
+//     inquirer
+//     .prompt([
+//         {
+//             type: "list",
+//             name: "employee",
+//             message: "Which employee would you like to delete?",
+//             choices: employeesList()
+//         }
+//     ])
+//     .then(response => {
+//         db.query('DELETE * FROM employees WHERE id = ?', response.employee, (err, results) => {
+//             if(err) throw err; 
+//         })
+//     })
+//     .then(res => {
+//         console.log("Employee deleted sucessfully");
+//         mainMenu();
+//     })    
+// }
 
 // Function to change the role_id of an existing record in employees
 function updateEmployeeRole() {
@@ -253,21 +292,6 @@ function viewRoles() {
     })
 }
 
-// Function to return all roles as an array
-// function rolesList() {
-//     return db.query("SELECT * FROM roles as r", (err,res) => {
-//         if(err) throw err;
-//     }) 
-//     .then(res => {
-//         return res[0].map(role => {
-//             return {
-//                 name: r.title,
-//                 value: r.id
-//             }
-//         })
-//     })      
-// }
-
 // Function for user to add a role by writing a record to the roles table and relating to a department (departments.id)
 function addRole() {
     // Testing - function execution
@@ -327,57 +351,57 @@ function addRole() {
         .catch(err => {throw err})
 }
 
-// Function to delete record in the roles table
-function deleteRole() {
-    console.log("Delete Role");
-    db.promise().query("SELECT * FROM roles")
-        .then(res => {
-            // result is an array of arrays of roles table record data, column definitios 
-            // console.log(res);
-            // map the the values of the 1st object (table record data array) into a new set of values expected by inquirer.prompt later
-            return res[0].map(role => {
-                return {
-                    name: role.title,
-                    value: role.id
-                }
-            })
-        })
-        // User the new departmentList array for the choices in Department selection question
-        .then((rolesList) => {
-            return inquirer
-            .prompt([
-                {
-                    type: "list",
-                    name: "role",
-                    message: "Which department would you like to delete?",
-                    choices: rolesList
-                }
-            ])
-        })
-        .then(answer => {
-            db.query('DELETE * FROM roles WHERE id = ?', answer.role, (err) => {
-                if(err) throw err; 
-            })
-        })
-        .then(res => {
-            console.log("Role deleted sucessfully");
-            mainMenu();
-        })
-        .catch(err => {throw err})
-}
+// // Function to delete record in the roles table
+// function deleteRole() {
+//     console.log("Delete Role");
+//     db.promise().query("SELECT * FROM roles")
+//         .then(res => {
+//             // result is an array of arrays of roles table record data, column definitios 
+//             // console.log(res);
+//             // map the the values of the 1st object (table record data array) into a new set of values expected by inquirer.prompt later
+//             return res[0].map(role => {
+//                 return {
+//                     name: role.title,
+//                     value: role.id
+//                 }
+//             })
+//         })
+//         // User the new departmentList array for the choices in Department selection question
+//         .then((rolesList) => {
+//             return inquirer
+//             .prompt([
+//                 {
+//                     type: "list",
+//                     name: "role",
+//                     message: "Which department would you like to delete?",
+//                     choices: rolesList
+//                 }
+//             ])
+//         })
+//         .then(answer => {
+//             db.query('DELETE * FROM roles WHERE id = ?', answer.role, (err) => {
+//                 if(err) throw err; 
+//             })
+//         })
+//         .then(res => {
+//             console.log("Role deleted sucessfully");
+//             mainMenu();
+//         })
+//         .catch(err => {throw err})
+// }
 
-// DEPARTMENTS functions
+// // DEPARTMENTS functions
 
-// Generate table showing department names and ids
-function viewDepartments() {
-    // Testing - function execution
-    // console.log("View all Departments");
-    db.query('SELECT id as ID, name as Department FROM departments', (err,res) => {
-        if(err) throw err; 
-        console.table(res);
-        mainMenu();
-    })
-}
+// // Generate table showing department names and ids
+// function viewDepartments() {
+//     // Testing - function execution
+//     // console.log("View all Departments");
+//     db.query('SELECT id as ID, name as Department FROM departments', (err,res) => {
+//         if(err) throw err; 
+//         console.table(res);
+//         mainMenu();
+//     })
+// }
 
 // Function for user to add a department by writing a record to the departments table
 function addDepartment() {
