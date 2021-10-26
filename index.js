@@ -56,26 +56,17 @@ function mainMenu () {
             case "Update Employee Manager":
                 updateEmployeeManager();
                 break;
-            case "Delete Employee":
-                deleteEmployee();
-                break;
             case "View all Roles":
                 viewRoles();
                 break;
             case "Add Role":
                 addRole();
                 break;
-            case "Delete Role":
-                deleteRole();
-                break;
             case "View all Departments":
                 viewDepartments();
                 break;
             case "Add Department":
                 addDepartment();
-                break;
-            case "Delete Department":
-                deleteDepartment();
                 break;
             case "Exit Program":
                 // called when b/c application is stopping, end of possible queries sent to MySQL
@@ -86,15 +77,14 @@ function mainMenu () {
     })
 }
 
-// EMPLOYEES functions
+// EMPLOYEES rows functions
 
-// show manager name////////////////////////////
 // Generate table with employee ids,  names, job titles, departments, salaries, and any managers 
 function viewEmployees() {
     // Testing - function execution
     // console.log("View all Employees")
     //sql query to render employees table data
-    const employees = 'SELECT e.id as ID, CONCAT(e.first_name," ",e.last_name) as Name, r.title as Title, d.name as Department, r.salary as Salary FROM employees as e JOIN roles as r on e.role_id = r.id JOIN departments as d on r.department_id = d.id'
+    const employees = 'SELECT e.id as ID, CONCAT(e.first_name," ",e.last_name) as Name, r.title as Title, d.name as Department, r.salary as Salary, CONCAT(m.first_name," ",  m.last_name) AS Manager FROM employees as e LEFT JOIN employees m ON e.manager_id = m.id JOIN roles as r on e.role_id = r.id JOIN departments as d on r.department_id = d.id'
     db.query(employees, (err,res) => {
         if(err) throw err; 
         console.table(res);
@@ -102,35 +92,10 @@ function viewEmployees() {
     })
 }
 
-//Empty array to store all roles as objects
-var rolesList = [];
-
-function listRoles() {
-    db.query("SELECT id, title FROM roles", function(err, res) {
-        if (err) throw err;
-        for (var i = 0; i < res.length; i++) {
-            rolesList.push(res[i].title);
-        }
-    })
-    return rolesList;
-}
-
-// //Empty array to store all departments as objects
-// var departmentsList = [];
-
-// function listDepartments() {
-//     db.query("SELECT id, name FROM departments", function(err, res) {
-//         if (err) throw err;
-//         for (var i = 0; i < res.length; i++) {
-//             departmentsList.push(res[i].name);
-//         }
-//     })
-//     return departmentsList;
-// }
-
 //Empty array to store all employees as objects
 var employeesList = [];
 
+//function to build the employees array
 function listEmployees() {
     db.query('SELECT id, CONCAT(first_name," ",last_name) as name FROM employees', function(err, res) {
         if (err) throw err;
@@ -141,7 +106,6 @@ function listEmployees() {
     return employeesList;
 }
 
-//done
 // Function to create a new record in the employees table
 function addEmployee() {
     console.log("Add Employee");
@@ -189,30 +153,6 @@ function addEmployee() {
     })
 }
 
-// Function to delete record in the employees table
-function deleteEmployee() {
-    console.log("Delete Employee");
-    inquirer
-    .prompt([
-        {
-            type: "list",
-            name: "employee",
-            message: "Which employee would you like to delete?",
-            choices: listEmployees()
-        }
-    ])
-    .then(response => {
-        db.query('DELETE * FROM employees WHERE id = ?', response.employee, (err, results) => {
-            if(err) throw err; 
-        })
-    })
-    .then(res => {
-        console.log("Employee deleted sucessfully");
-        mainMenu();
-    })    
-}
-
-//done
 // Function to change the role_id of an existing record in employees
 function updateEmployeeRole() {
     console.log("Update Employee role");
@@ -239,7 +179,7 @@ function updateEmployeeRole() {
             if(err) throw err;
         })
     })
-    .then(response => {
+    .then(res => {
         console.log("Employee role updated successfully");
         mainMenu();
     })
@@ -248,37 +188,25 @@ function updateEmployeeRole() {
 // Funtion to update the manager_id of any employees table record
 function updateEmployeeManager() {
     console.log("Update Employee manager");
-    // Create an array of employees to be used in the prompt to select which employee to edit
-    return inquirer
+    inquirer
     .prompt([
         {
             type: "list",
             name: "employee",
             message: "Which employee's do you want to update?",
-            choices: employeesList()
+            choices: listEmployees()
         },
         {
             type: "list",
             name: "manager",
             message:"Which manager should be assigned to the selected employee?",
-            choices: employeesList()
+            choices: listEmployees()
         }
     ])
-    .then(answer => {
-        db.query('UPDATE employee SET manager_id = ? WHERE id = ?', [response.manager, response.employee], (err, results) => {
-            if(err) throw err; 
-        })
-    })
     .then(function(answer) {
-        var roleId = listRoles().indexOf(answer.role) + 1
         var managerId = listEmployees().indexOf(answer.manager) + 1
-        const employee = {
-            first_name: answer.firstname,
-            last_name: answer.lastname,
-            manager_id: managerId,
-            role_id: roleId,
-        }
-        db.query('INSERT INTO employees SET ? ', employee, (err) => {
+        var employeeId = listEmployees().indexOf(answer.employee) + 1
+        db.query('UPDATE employees SET manager_id = ? WHERE id = ?', [managerId, employeeId], (err) => {
             if(err) throw err; 
         })
     })
@@ -288,9 +216,8 @@ function updateEmployeeManager() {
     })
 }
 
-// ROLES Functions
+// ROLES data Functions
 
-// done
 // Generate table with all job titles, ids, salaraies, and corresponding departments 
 function viewRoles() {
     // Testing - function execution
@@ -303,7 +230,20 @@ function viewRoles() {
     })
 }
 
-//done
+//Empty array to store all roles as objects
+var rolesList = [];
+
+//Function to build the roles array
+function listRoles() {
+    db.query("SELECT id, title FROM roles", function(err, res) {
+        if (err) throw err;
+        for (var i = 0; i < res.length; i++) {
+            rolesList.push(res[i].title);
+        }
+    })
+    return rolesList;
+}
+
 // Function for user to add a role by writing a record to the roles table and relating to a department (departments.id)
 function addRole() {
     // Testing - function execution
@@ -363,48 +303,8 @@ function addRole() {
         .catch(err => {throw err})
 }
 
-// Function to delete record in the roles table
-function deleteRole() {
-    console.log("Delete Role");
-    db.promise().query("SELECT * FROM roles")
-        .then(res => {
-            // result is an array of arrays of roles table record data, column definitios 
-            // console.log(res);
-            // map the the values of the 1st object (table record data array) into a new set of values expected by inquirer.prompt later
-            return res[0].map(role => {
-                return {
-                    name: role.title,
-                    value: role.id
-                }
-            })
-        })
-        // User the new departmentList array for the choices in Department selection question
-        .then((rolesList) => {
-            return inquirer
-            .prompt([
-                {
-                    type: "list",
-                    name: "role",
-                    message: "Which department would you like to delete?",
-                    choices: rolesList
-                }
-            ])
-        })
-        .then(answer => {
-            db.query('DELETE * FROM roles WHERE id = ?', answer.role, (err) => {
-                if(err) throw err; 
-            })
-        })
-        .then(res => {
-            console.log("Role deleted sucessfully");
-            mainMenu();
-        })
-        .catch(err => {throw err})
-}
+// DEPARTMENTS data functions
 
-// DEPARTMENTS functions
-
-//done
 // Generate table showing department names and ids
 function viewDepartments() {
     // Testing - function execution
@@ -416,7 +316,6 @@ function viewDepartments() {
     })
 }
 
-//done
 // Function for user to add a department by writing a record to the departments table
 function addDepartment() {
     console.log("Add Department");
@@ -438,29 +337,6 @@ function addDepartment() {
             mainMenu();
         })
     })
-}
-
-// Function to delete record in the departments table
-function deleteDepartment() {
-    console.log("Delete Department");
-    inquirer
-    .prompt([
-        {
-            type: "list",
-            name: "department",
-            message: "Which department would you like to delete?",
-            choices: departmentsList()
-        }
-    ])
-    .then(response => {
-        db.query('DELETE * FROM departments WHERE id = ?', response.department, (err, results) => {
-            if(err) throw err; 
-        })
-    })
-    .then(res => {
-        console.log("Department deleted sucessfully");
-        mainMenu();
-    })    
 }
 
 // Start app logic at main menu
