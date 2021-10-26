@@ -31,13 +31,10 @@ function mainMenu () {
                 "Add Employee",
                 "Update Employee Role",
                 "Update Employee Manager",
-                "Delete Employee",
                 "View all Roles",
                 "Add Role",
-                "Delete Role",
                 "View all Departments",
                 "Add Department",
-                "Delete Department",
                 "Exit Program"
             ]
         }
